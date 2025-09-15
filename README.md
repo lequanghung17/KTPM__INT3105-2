@@ -37,6 +37,6 @@
         127.0.0.1:5900
     ```
 
-Password mặc định: docker
-        ```
+Sau đó nhập password ( mặc định docker hoặc thay đổi theo ý muốn )
+
 
