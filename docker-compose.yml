@@ -1,0 +1,68 @@
+# version: "3.9"
+
+# services:
+#   lxde:
+#     build: .
+#     container_name: lxde-vnc
+#     environment:
+#       - VNC_PASSWORD=docker
+#       - VNC_GEOMETRY=1360x768 #
+#     ports:
+#       - "5900:5900" # TigerVNC/RealVNC: 127.0.0.1:5900
+#     volumes:
+#       - ./data:/home/docker/data
+#     shm_size: "1g"
+#     command:
+#       - bash
+#       - -lc
+#       - |
+#         set -e
+#         # 1) Tạo mật khẩu VNC nếu thiếu
+#         mkdir -p ~/.vnc
+#         x11vnc -storepasswd ${VNC_PASSWORD:-docker} ~/.vnc/passwd
+
+#         # 2) Dọn tiến trình/lock cũ, tạo socket X11
+#         pkill -f x11vnc || true
+#         pkill -f Xvfb || true
+#         rm -f /tmp/.X99-lock || true
+#         rm -rf /tmp/.X11-unix || true
+#         mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
+
+#         # 3) Khởi động Xvfb (:99) + LXDE
+#         export DISPLAY=:99
+#         GEOM=${VNC_GEOMETRY:-1360x768}        # ví dụ: 1920x1080, 1280x800, ...
+#         Xvfb :99 -screen 0 ${GEOM}x24 -nolisten tcp &
+#         sleep 1
+#         dbus-launch --exit-with-session startlxde &
+
+#         # 4) Chạy x11vnc trỏ tới :99
+#         exec x11vnc -display :99 \
+#           -rfbauth ~/.vnc/passwd \
+#           -shared -forever -listen 0.0.0.0 -rfbport 5900 -xkb
+version: "3.9"
+
+services:
+  lxde-vnc:
+    build: .
+    container_name: lxde-vnc
+
+    # Map cổng VNC ra host
+    ports:
+      - "5900:5900"
+
+    # Thiết lập biến môi trường để Xvfb nhận đúng tham số WxHxD
+    environment:
+      VNC_PASSWORD: "docker" # Đổi mật khẩu theo ý bạn
+      VNC_GEOMETRY: "1360x768" # Độ phân giải (ví dụ: 1920x1080)
+      VNC_DEPTH: "24" # Độ sâu màu
+      DISPLAY: ":99" # Display ảo cho Xvfb
+
+    # Mount dữ liệu (tùy chọn). Trên Windows vẫn dùng đường dẫn tương đối này.
+    volumes:
+      - ./data:/home/docker/data
+
+    # Tăng shared memory để trình duyệt/ứng dụng GUI hoạt động ổn định hơn
+    shm_size: "1g"
+
+    # Tự khởi động lại khi container gặp sự cố hoặc reboot máy
+    restart: unless-stopped
